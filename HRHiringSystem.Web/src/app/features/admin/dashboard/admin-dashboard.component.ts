@@ -303,11 +303,12 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   viewCandidateDetails(application: JobApplication): void {
-    if (!application.candidateId) {
+    if (!application.candidateId || !application.jobId) {
       return;
     }
 
-    this.router.navigate(['/candidates', application.candidateId]);
+    // Pass both candidateId and jobId to avoid showing wrong job data
+    this.router.navigate(['/candidates', application.candidateId, 'job', application.jobId]);
   }
 
   getCandidateDisplayName(application: JobApplication): string {

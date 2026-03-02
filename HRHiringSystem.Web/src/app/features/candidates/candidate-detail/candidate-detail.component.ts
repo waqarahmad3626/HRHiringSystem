@@ -13,6 +13,7 @@ import { takeUntil, finalize, timeout } from 'rxjs/operators';
 })
 export class CandidateDetailComponent implements OnInit, OnDestroy {
   candidateId = '';
+  selectedJobId = '';
   candidateApplication: JobApplication | null = null;
   report: EvaluationReport | null = null;
   loading = false;
@@ -34,14 +35,22 @@ export class CandidateDetailComponent implements OnInit, OnDestroy {
     this.route.paramMap
       .pipe(takeUntil(this.destroy$))
       .subscribe(params => {
-        const id = params.get('id');
-        if (!id) {
+        const candidateId = params.get('id');
+        const jobId = params.get('jobId');
+        
+        if (!candidateId) {
           this.error = 'Candidate id is missing.';
           return;
         }
 
-        // Reset component state for new candidate
-        this.candidateId = id;
+        if (!jobId) {
+          this.error = 'Job id is missing.';
+          return;
+        }
+
+        // Reset component state for new candidate/job combination
+        this.candidateId = candidateId;
+        this.selectedJobId = jobId;
         this.candidateApplication = null;
         this.report = null;
         this.error = '';
@@ -69,10 +78,13 @@ export class CandidateDetailComponent implements OnInit, OnDestroy {
     ).subscribe({
       next: applications => {
         this.ngZone.run(() => {
-          this.candidateApplication = applications.find(app => app.candidateId === this.candidateId) || null;
+          // Find application for this candidate AND this specific job (not just any job)
+          this.candidateApplication = applications.find(
+            app => app.candidateId === this.candidateId && app.jobId === this.selectedJobId
+          ) || null;
 
           if (!this.candidateApplication) {
-            this.error = 'Candidate not found.';
+            this.error = 'Application not found for this candidate and job.';
           } else if (this.candidateApplication.mongoReportId && this.candidateApplication.jobId) {
             this.loadReport(this.candidateApplication.mongoReportId, this.candidateApplication.jobId);
           }

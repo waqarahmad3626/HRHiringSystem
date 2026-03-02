@@ -16,7 +16,7 @@ const routes: Routes = [
   { path: 'admin', component: AdminDashboardComponent, canActivate: [AuthGuard] },
   { path: 'admin/applications/:jobId', component: ApplicationReviewComponent, canActivate: [AuthGuard] },
   { path: 'change-password', component: ChangePasswordComponent, canActivate: [AuthGuard] },
-  { path: 'candidates/:id', component: CandidateDetailComponent, canActivate: [AuthGuard] },
+  { path: 'candidates/:id/job/:jobId', component: CandidateDetailComponent, canActivate: [AuthGuard] },
   { path: '**', redirectTo: '' }
 ];
 
