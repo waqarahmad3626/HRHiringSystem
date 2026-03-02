@@ -1,8 +1,9 @@
-import { Component, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, NgZone } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { JobApplication, EvaluationReport } from '../../../core/models';
 import { JobApplicationService, EvaluationReportService } from '../../../core/services';
-import { finalize, timeout } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { takeUntil, finalize, timeout } from 'rxjs/operators';
 
 @Component({
   selector: 'app-candidate-detail',
@@ -10,13 +11,14 @@ import { finalize, timeout } from 'rxjs/operators';
   templateUrl: './candidate-detail.component.html',
   styleUrls: ['./candidate-detail.component.scss']
 })
-export class CandidateDetailComponent implements OnInit {
+export class CandidateDetailComponent implements OnInit, OnDestroy {
   candidateId = '';
   candidateApplication: JobApplication | null = null;
   report: EvaluationReport | null = null;
   loading = false;
   loadingReport = false;
   error = '';
+  private destroy$ = new Subject<void>();
 
   constructor(
     private route: ActivatedRoute,
@@ -28,14 +30,28 @@ export class CandidateDetailComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (!id) {
-      this.error = 'Candidate id is missing.';
-      return;
-    }
+    // Subscribe to route parameter changes (fixes caching issue when switching candidates)
+    this.route.paramMap
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(params => {
+        const id = params.get('id');
+        if (!id) {
+          this.error = 'Candidate id is missing.';
+          return;
+        }
 
-    this.candidateId = id;
-    this.loadCandidateDetail();
+        // Reset component state for new candidate
+        this.candidateId = id;
+        this.candidateApplication = null;
+        this.report = null;
+        this.error = '';
+        this.loadCandidateDetail();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadCandidateDetail(): void {
