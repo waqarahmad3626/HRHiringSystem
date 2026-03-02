@@ -204,8 +204,8 @@ Before running TalentLink, ensure you have:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/TalentLink.git
-cd TalentLink
+[git clone https://github.com/waqarahmad3626/HRHiringSystem.git
+cd HRHiringSystem
 ```
 
 ### 2. Configure Environment Variables
