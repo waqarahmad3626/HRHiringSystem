@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# Azure Functions
+local.settings.json
+.python_packages/
+
+# Misc
+.git/
+.gitignore
+README.md
+*.md
+tests/

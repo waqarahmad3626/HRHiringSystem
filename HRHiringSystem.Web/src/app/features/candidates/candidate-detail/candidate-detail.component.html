@@ -1,0 +1,402 @@
+<div class="container py-5">
+  <div class="mb-4">
+    <button class="btn btn-outline-secondary" (click)="backToDashboard()">
+      <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="text-center py-4">Loading candidate details...</div>
+
+  <div *ngIf="error && !loading" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <div *ngIf="candidateApplication && !loading">
+    <!-- Header Card with Score Badge -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-md-8">
+            <div class="d-flex align-items-center">
+              <div class="avatar-circle me-3">
+                <i class="fas fa-user"></i>
+              </div>
+              <div>
+                <h4 class="mb-1">{{ (candidateApplication.candidate?.firstName || '') + ' ' + (candidateApplication.candidate?.lastName || '') }}</h4>
+                <p class="text-muted mb-0">
+                  <i class="fas fa-envelope me-2"></i>{{ candidateApplication.candidate?.email || '-' }}
+                  <span class="mx-2">|</span>
+                  <i class="fas fa-phone me-2"></i>{{ candidateApplication.candidate?.phone || '-' }}
+                </p>
+                <p class="text-muted mb-0 mt-1">
+                  <i class="fas fa-briefcase me-2"></i>Applied for: <strong>{{ candidateApplication.job?.title || '-' }}</strong>
+                  <span class="mx-2">|</span>
+                  <i class="fas fa-calendar me-2"></i>{{ candidateApplication.appliedDate | date:'medium' }}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <div class="d-flex flex-column align-items-md-end">
+              <span class="badge fs-6 mb-2" [ngClass]="getStatusClass(candidateApplication.status)">
+                {{ candidateApplication.status || 'Pending' }}
+              </span>
+              <div *ngIf="report" class="score-circle" [ngClass]="getScoreCircleClass(report.overallScore)">
+                <span class="score-value">{{ report.overallScore }}</span>
+                <span class="score-label">Score</span>
+              </div>
+              <div *ngIf="!report && candidateApplication.score !== undefined" class="score-circle" [ngClass]="getScoreCircleClass(candidateApplication.score)">
+                <span class="score-value">{{ candidateApplication.score }}</span>
+                <span class="score-label">Score</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3">
+          <a *ngIf="candidateApplication.cvUrl" [href]="candidateApplication.cvUrl" target="_blank" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-download me-1"></i> Download CV
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Report State -->
+    <div *ngIf="loadingReport" class="card shadow-sm mb-4">
+      <div class="card-body text-center py-5">
+        <div class="spinner-border text-primary mb-3"></div>
+        <p class="text-muted mb-0">Loading evaluation report...</p>
+      </div>
+    </div>
+
+    <!-- No Report State -->
+    <div *ngIf="!loadingReport && !report" class="card shadow-sm mb-4">
+      <div class="card-body text-center py-5">
+        <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">Evaluation Pending</h5>
+        <p class="text-muted mb-0">AI is processing this application. Please check back later.</p>
+      </div>
+    </div>
+
+    <!-- Tabs for Report Data -->
+    <div *ngIf="!loadingReport && report">
+      <ul class="nav nav-tabs mb-0" id="evaluationTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" 
+                  type="button" role="tab" aria-controls="overview" aria-selected="true">
+            <i class="fas fa-chart-pie me-2"></i>Overview
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="skills-tab" data-bs-toggle="tab" data-bs-target="#skills" 
+                  type="button" role="tab" aria-controls="skills" aria-selected="false">
+            <i class="fas fa-code me-2"></i>Skills
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="experience-tab" data-bs-toggle="tab" data-bs-target="#experience" 
+                  type="button" role="tab" aria-controls="experience" aria-selected="false">
+            <i class="fas fa-briefcase me-2"></i>Experience
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary" 
+                  type="button" role="tab" aria-controls="summary" aria-selected="false">
+            <i class="fas fa-robot me-2"></i>AI Summary
+          </button>
+        </li>
+        <li class="nav-item" role="presentation" *ngIf="(report.interviewQuestions?.length || 0) > 0 && candidateApplication.status !== 'Rejected'">
+          <button class="nav-link" id="questions-tab" data-bs-toggle="tab" data-bs-target="#questions" 
+                  type="button" role="tab" aria-controls="questions" aria-selected="false">
+            <i class="fas fa-question-circle me-2"></i>Interview Questions
+          </button>
+        </li>
+      </ul>
+
+      <div class="tab-content border border-top-0 rounded-bottom p-4 bg-white shadow-sm" id="evaluationTabsContent">
+        <!-- Overview Tab -->
+        <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+          <h5 class="mb-4"><i class="fas fa-chart-line me-2 text-primary"></i>Evaluation Overview</h5>
+          
+          <div class="row g-4">
+            <div class="col-md-3">
+              <div class="score-card text-center p-4 rounded h-100"
+                   [ngClass]="getScoreCardClass(report.overallScore)">
+                <h1 class="mb-1">{{ report.overallScore }}</h1>
+                <p class="mb-0 text-muted">Overall Score</p>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="score-card text-center p-4 rounded bg-light h-100">
+                <h1 class="mb-1 text-info">{{ report.skillsAnalysis?.skillMatchPercentage || 0 }}%</h1>
+                <p class="mb-0 text-muted">Skills Match</p>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="score-card text-center p-4 rounded bg-light h-100">
+                <h1 class="mb-1" [class.text-success]="report.educationAnalysis?.educationMet" 
+                    [class.text-danger]="!report.educationAnalysis?.educationMet">
+                  <i class="fas" [ngClass]="report.educationAnalysis?.educationMet ? 'fa-check' : 'fa-times'"></i>
+                </h1>
+                <p class="mb-0 text-muted">Education {{ report.educationAnalysis?.educationMet ? 'Met' : 'Not Met' }}</p>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="score-card text-center p-4 rounded bg-light h-100">
+                <h1 class="mb-1" [class.text-success]="report.experienceAnalysis?.experienceMet" 
+                    [class.text-danger]="!report.experienceAnalysis?.experienceMet">
+                  <i class="fas" [ngClass]="report.experienceAnalysis?.experienceMet ? 'fa-check' : 'fa-times'"></i>
+                </h1>
+                <p class="mb-0 text-muted">Experience {{ report.experienceAnalysis?.experienceMet ? 'Met' : 'Not Met' }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Decision Card -->
+          <div class="card mt-4 border-0" [ngClass]="getDecisionCardClass(report.status)">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-auto">
+                  <i class="fas fa-2x" [ngClass]="getDecisionIcon(report.status)"></i>
+                </div>
+                <div class="col">
+                  <h5 class="mb-1">Decision: {{ report.summary?.decision || report.status }}</h5>
+                  <p class="mb-0">{{ report.summary?.reasoning || 'Based on AI evaluation of skills, experience, and education requirements.' }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Metadata -->
+          <div class="mt-4 p-3 bg-light rounded small">
+            <div class="row text-muted">
+              <div class="col-md-3">
+                <i class="fas fa-robot me-1"></i> Model: {{ report.aiMetadata?.modelUsed || 'N/A' }}
+              </div>
+              <div class="col-md-3">
+                <i class="fas fa-clock me-1"></i> Processing: {{ report.aiMetadata?.totalProcessingTimeMs || 0 }}ms
+              </div>
+              <div class="col-md-3">
+                <i class="fas fa-sync me-1"></i> Reflection: {{ report.aiMetadata?.reflectionApplied ? 'Applied' : 'No' }}
+              </div>
+              <div class="col-md-3">
+                <i class="fas fa-calendar me-1"></i> {{ report.createdAt | date:'medium' }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skills Tab -->
+        <div class="tab-pane fade" id="skills" role="tabpanel" aria-labelledby="skills-tab">
+          <h5 class="mb-4"><i class="fas fa-code me-2 text-primary"></i>Skills Analysis</h5>
+          
+          <div class="row mb-4">
+            <div class="col-md-4">
+              <div class="text-center p-3 rounded bg-info-light">
+                <h2 class="text-info mb-0">{{ report.skillsAnalysis?.skillMatchPercentage || 0 }}%</h2>
+                <small class="text-muted">Match Percentage</small>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="text-center p-3 rounded bg-success-light">
+                <h2 class="text-success mb-0">{{ report.skillsAnalysis?.matchedSkills?.length || 0 }}</h2>
+                <small class="text-muted">Matched Skills</small>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="text-center p-3 rounded bg-danger-light">
+                <h2 class="text-danger mb-0">{{ report.skillsAnalysis?.missingSkills?.length || 0 }}</h2>
+                <small class="text-muted">Missing Skills</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-4">
+            <div class="col-md-4">
+              <div class="p-3 rounded bg-success-light h-100">
+                <h6 class="text-success mb-3"><i class="fas fa-check-circle me-1"></i>Matched Skills</h6>
+                <div class="d-flex flex-wrap gap-2">
+                  <span *ngFor="let skill of report.skillsAnalysis?.matchedSkills" class="badge bg-success">{{ skill }}</span>
+                  <span *ngIf="!report.skillsAnalysis?.matchedSkills?.length" class="text-muted">No matched skills</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3 rounded bg-danger-light h-100">
+                <h6 class="text-danger mb-3"><i class="fas fa-times-circle me-1"></i>Missing Skills</h6>
+                <div class="d-flex flex-wrap gap-2">
+                  <span *ngFor="let skill of report.skillsAnalysis?.missingSkills" class="badge bg-danger">{{ skill }}</span>
+                  <span *ngIf="!report.skillsAnalysis?.missingSkills?.length" class="text-muted">No missing skills</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3 rounded bg-info-light h-100">
+                <h6 class="text-info mb-3"><i class="fas fa-plus-circle me-1"></i>Additional Skills</h6>
+                <div class="d-flex flex-wrap gap-2">
+                  <span *ngFor="let skill of report.skillsAnalysis?.additionalSkills" class="badge bg-info">{{ skill }}</span>
+                  <span *ngIf="!report.skillsAnalysis?.additionalSkills?.length" class="text-muted">No additional skills</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="report.skillsAnalysis?.details" class="mt-4 p-3 bg-light rounded">
+            <h6 class="mb-2"><i class="fas fa-comment me-2"></i>Analysis Details</h6>
+            <p class="mb-0">{{ report.skillsAnalysis.details }}</p>
+          </div>
+        </div>
+
+        <!-- Experience Tab -->
+        <div class="tab-pane fade" id="experience" role="tabpanel" aria-labelledby="experience-tab">
+          <h5 class="mb-4"><i class="fas fa-briefcase me-2 text-primary"></i>Experience & Education Analysis</h5>
+          
+          <div class="row g-4">
+            <!-- Experience Card -->
+            <div class="col-md-6">
+              <div class="card h-100">
+                <div class="card-header bg-white">
+                  <h6 class="mb-0"><i class="fas fa-briefcase me-2"></i>Experience</h6>
+                </div>
+                <div class="card-body">
+                  <div class="row text-center mb-3">
+                    <div class="col-6">
+                      <div class="p-3 rounded bg-light">
+                        <h3 class="mb-0">{{ report.experienceAnalysis?.candidateYears || 0 }}</h3>
+                        <small class="text-muted">Candidate Years</small>
+                      </div>
+                    </div>
+                    <div class="col-6">
+                      <div class="p-3 rounded bg-light">
+                        <h3 class="mb-0">{{ report.experienceAnalysis?.requiredYears || 0 }}</h3>
+                        <small class="text-muted">Required Years</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="text-center mb-3">
+                    <span class="badge fs-6" [ngClass]="report.experienceAnalysis?.experienceMet ? 'bg-success' : 'bg-danger'">
+                      <i class="fas me-1" [ngClass]="report.experienceAnalysis?.experienceMet ? 'fa-check' : 'fa-times'"></i>
+                      {{ report.experienceAnalysis?.experienceMet ? 'Requirement Met' : 'Requirement Not Met' }}
+                    </span>
+                  </div>
+                  <div class="progress mb-2" style="height: 10px;">
+                    <div class="progress-bar" [ngClass]="report.experienceAnalysis?.experienceMet ? 'bg-success' : 'bg-danger'"
+                         [style.width.%]="getExperienceProgress()"></div>
+                  </div>
+                  <p *ngIf="report.experienceAnalysis?.experienceComments" class="text-muted small mt-3 mb-0">
+                    {{ report.experienceAnalysis.experienceComments }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Education Card -->
+            <div class="col-md-6">
+              <div class="card h-100">
+                <div class="card-header bg-white">
+                  <h6 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>Education</h6>
+                </div>
+                <div class="card-body">
+                  <div class="mb-3">
+                    <label class="text-muted small">Candidate Education</label>
+                    <p class="fw-semibold mb-2">{{ report.educationAnalysis?.candidateEducation || 'Not specified' }}</p>
+                  </div>
+                  <div class="mb-3">
+                    <label class="text-muted small">Required Education</label>
+                    <p class="fw-semibold mb-2">{{ report.educationAnalysis?.requiredEducation || 'Not specified' }}</p>
+                  </div>
+                  <div class="text-center">
+                    <span class="badge fs-6" [ngClass]="report.educationAnalysis?.educationMet ? 'bg-success' : 'bg-danger'">
+                      <i class="fas me-1" [ngClass]="report.educationAnalysis?.educationMet ? 'fa-check' : 'fa-times'"></i>
+                      {{ report.educationAnalysis?.educationMet ? 'Requirement Met' : 'Requirement Not Met' }}
+                    </span>
+                  </div>
+                  <p *ngIf="report.educationAnalysis?.educationComments" class="text-muted small mt-3 mb-0">
+                    {{ report.educationAnalysis.educationComments }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Summary Tab -->
+        <div class="tab-pane fade" id="summary" role="tabpanel" aria-labelledby="summary-tab">
+          <h5 class="mb-4"><i class="fas fa-robot me-2 text-primary"></i>AI Summary & Recommendation</h5>
+          
+          <div class="row g-4 mb-4">
+            <div class="col-md-6">
+              <div class="p-4 rounded bg-success-light h-100">
+                <h6 class="text-success mb-3"><i class="fas fa-thumbs-up me-2"></i>Strengths</h6>
+                <ul class="mb-0 ps-3">
+                  <li *ngFor="let strength of report.summary?.strengths" class="mb-2">{{ strength }}</li>
+                  <li *ngIf="!report.summary?.strengths?.length" class="text-muted">No strengths identified</li>
+                </ul>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-4 rounded bg-warning-light h-100">
+                <h6 class="text-warning mb-3"><i class="fas fa-exclamation-triangle me-2"></i>Areas for Improvement</h6>
+                <ul class="mb-0 ps-3">
+                  <li *ngFor="let weakness of report.summary?.weaknesses" class="mb-2">{{ weakness }}</li>
+                  <li *ngIf="!report.summary?.weaknesses?.length" class="text-muted">No areas identified</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+              <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Recommendation</h6>
+            </div>
+            <div class="card-body">
+              <p class="mb-0 fs-5">{{ report.summary?.recommendation || 'No recommendation available.' }}</p>
+            </div>
+          </div>
+
+          <div *ngIf="report.summary?.cultureFitAssessment" class="card mt-4">
+            <div class="card-header bg-white">
+              <h6 class="mb-0"><i class="fas fa-users me-2"></i>Culture Fit Assessment</h6>
+            </div>
+            <div class="card-body">
+              <p class="mb-0">{{ report.summary.cultureFitAssessment }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interview Questions Tab -->
+        <div class="tab-pane fade" id="questions" role="tabpanel" aria-labelledby="questions-tab">
+          <h5 class="mb-4"><i class="fas fa-question-circle me-2 text-primary"></i>Suggested Interview Questions</h5>
+          
+          <div class="accordion" id="interviewQuestionsAccordion">
+            <div *ngFor="let question of report.interviewQuestions; let i = index" class="accordion-item">
+              <h2 class="accordion-header" [id]="'heading' + i">
+                <button class="accordion-button collapsed" type="button" 
+                        [attr.data-bs-toggle]="'collapse'" 
+                        [attr.data-bs-target]="'#collapse' + i"
+                        [attr.aria-expanded]="false"
+                        [attr.aria-controls]="'collapse' + i">
+                  <span class="badge me-2" [ngClass]="getDifficultyClass(question.difficulty)">
+                    {{ question.difficulty }}
+                  </span>
+                  <span class="badge bg-secondary me-2">{{ question.category }}</span>
+                  <span class="flex-grow-1">{{ question.question }}</span>
+                </button>
+              </h2>
+              <div [id]="'collapse' + i" class="accordion-collapse collapse" [attr.aria-labelledby]="'heading' + i">
+                <div class="accordion-body bg-light">
+                  <strong class="text-muted"><i class="fas fa-check-circle me-1"></i>Expected Answer:</strong>
+                  <p class="mb-0 mt-2">{{ question.expectedAnswer }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="(report.interviewQuestions?.length || 0) === 0" class="text-center py-4 text-muted">
+            <i class="fas fa-info-circle fa-2x mb-2"></i>
+            <p class="mb-0">No interview questions available for this candidate.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

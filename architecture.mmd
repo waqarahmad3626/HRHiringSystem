@@ -1,0 +1,357 @@
+%% =====================================================
+%% TalentLink - HR Hiring System Architecture
+%% Complete System Overview
+%% Last Updated: March 2026
+%% =====================================================
+
+graph TB
+    subgraph "Frontend Layer - Angular 18"
+        A[Angular 18 SPA<br/>Bootstrap 5 UI<br/>nginx container]
+        A1[Candidate Portal<br/>Job Listings & Apply]
+        A2[HR Dashboard<br/>Manage Jobs & Review]
+        A3[Admin Panel<br/>Users & Roles]
+        A --> A1
+        A --> A2
+        A --> A3
+    end
+
+    subgraph "API Layer - .NET 10"
+        B[.NET 10 Web API<br/>Clean Architecture<br/>Docker Container]
+        B1[Controllers<br/>Auth, Jobs, Users<br/>Reports, Applications]
+        B2[Application Layer<br/>Handlers, Validators<br/>DTOs, Mappings]
+        B3[Domain Layer<br/>Entities, Enums<br/>Business Rules]
+        B4[Infrastructure Layer<br/>Repositories<br/>External Services]
+        B --> B1
+        B1 --> B2
+        B2 --> B3
+        B2 --> B4
+    end
+
+    subgraph "Data Layer"
+        C1[(SQL Server 2022<br/>Jobs, Users, Roles<br/>Applications, Candidates)]
+        C2[(MongoDB 7<br/>Evaluation Reports<br/>Per-Job Databases)]
+        C3[(Redis 7<br/>JWT Token Cache<br/>Session Management)]
+        C4[(Azurite Blob<br/>CV File Storage<br/>PDF Documents)]
+    end
+
+    subgraph "AI Agent Layer - Python FastAPI"
+        D[Python 3.11 FastAPI<br/>Agentic AI Pipeline<br/>Docker Container]
+        D1[CV Parser<br/>PyMuPDF4LLM<br/>Text Extraction]
+        D2[Skill Extractor<br/>LLM-Based<br/>CV & Job Skills]
+        D3[Scoring Tool<br/>Skills, Education<br/>Experience Analysis]
+        D4[Reflection Tool<br/>Self-Validation<br/>Score Adjustment]
+        D5[Question Generator<br/>Interview Qs<br/>Expected Answers]
+        D6[LLM Client<br/>Google Gemini API<br/>gemma-3-27b-it]
+        D --> D1
+        D --> D2
+        D --> D3
+        D --> D4
+        D --> D5
+        D1 --> D6
+        D2 --> D6
+        D3 --> D6
+        D4 --> D6
+        D5 --> D6
+    end
+
+    subgraph "Background Processing"
+        E[Azure Functions<br/>Python Runtime<br/>Queue Trigger]
+    end
+
+    subgraph "External Services"
+        G[Google AI Studio<br/>Gemini API<br/>gemma-3-27b-it Model]
+    end
+
+    %% ===== USER FLOWS =====
+    
+    %% Candidate Flow
+    A1 -->|1. Browse Jobs| B1
+    A1 -->|2. Apply with CV| B1
+    B1 -->|3. Store Application| C1
+    B1 -->|4. Save CV File| C4
+    B1 -->|5. Trigger Queue| E
+    
+    %% HR Review Flow
+    A2 -->|View Applications| B1
+    A2 -->|View Reports| B1
+    A2 -->|Update Status| B1
+    
+    %% Admin Flow
+    A3 -->|Manage Users| B1
+    A3 -->|Manage Roles| B1
+    
+    %% ===== AI EVALUATION FLOW =====
+    
+    E -->|6. Trigger Evaluation| D
+    D -->|7. Download CV| C4
+    D1 -->|8. Parse CV Text| D2
+    D2 -->|9. Extract Skills| D3
+    D3 -->|10. Calculate Score| D4
+    D4 -->|11. Reflect & Validate| D5
+    D5 -->|12. Generate Questions| D
+    D -->|13. Save Report| B1
+    B1 -->|14. Store in MongoDB| C2
+    B1 -->|15. Update SQL Status| C1
+    
+    %% ===== API DATA ACCESS =====
+    
+    B4 --> C1
+    B4 --> C2
+    B4 --> C3
+    B4 --> C4
+    
+    %% ===== AUTHENTICATION =====
+    
+    A -->|JWT Token| B
+    B -->|Validate Token| C3
+    
+    %% ===== LLM API CALLS =====
+    
+    D6 -->|API Requests| G
+
+    %% ===== STYLING =====
+    
+    classDef frontend fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    classDef api fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    classDef data fill:#fff8e1,stroke:#f57f17,stroke-width:2px
+    classDef ai fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef event fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef external fill:#e0f7fa,stroke:#00838f,stroke-width:2px
+
+    class A,A1,A2,A3 frontend
+    class B,B1,B2,B3,B4 api
+    class C1,C2,C3,C4 data
+    class D,D1,D2,D3,D4,D5,D6 ai
+    class E event
+    class G external
+
+---
+
+%% =====================================================
+%% EVALUATION REPORT DATA MODEL
+%% Stored in MongoDB (per-job database)
+%% =====================================================
+
+graph LR
+    subgraph "EvaluationReport Document"
+        R[Report]
+        R --> R1[candidateId: UUID]
+        R --> R2[jobId: UUID]
+        R --> R3[applicationId: UUID]
+        R --> R4[score: 0-100]
+        R --> R5[status: Accepted/HRReview/Rejected]
+        R --> R6[evaluatedAt: DateTime]
+        
+        R --> SK[skillsAnalysis]
+        SK --> SK1[matchedSkills: array]
+        SK --> SK2[missingSkills: array]
+        SK --> SK3[matchPercentage: int]
+        SK --> SK4[details: string]
+        
+        R --> ED[educationAnalysis]
+        ED --> ED1[required: string]
+        ED --> ED2[candidate: string]
+        ED --> ED3[match: boolean]
+        ED --> ED4[score: int]
+        
+        R --> EX[experienceAnalysis]
+        EX --> EX1[requiredYears: int]
+        EX --> EX2[candidateYears: int]
+        EX --> EX3[relevantExperience: array]
+        EX --> EX4[score: int]
+        
+        R --> SM[summary]
+        SM --> SM1[decision: string]
+        SM --> SM2[reasoning: string]
+        SM --> SM3[strengths: array]
+        SM --> SM4[concerns: array]
+        
+        R --> IQ[interviewQuestions: array]
+        IQ --> IQ1[category: string]
+        IQ --> IQ2[question: string]
+        IQ --> IQ3[difficulty: Easy/Medium/Hard]
+        IQ --> IQ4[expectedAnswer: string]
+        
+        R --> AI[aiMetadata]
+        AI --> AI1[model: gemma-3-27b-it]
+        AI --> AI2[processingTimeMs: long]
+        AI --> AI3[reflectionIterations: int]
+    end
+
+---
+
+%% =====================================================
+%% AI EVALUATION PIPELINE SEQUENCE
+%% =====================================================
+
+sequenceDiagram
+    participant Q as Queue Trigger
+    participant AI as AI Agent
+    participant LLM as Gemini API
+    participant API as .NET API
+    participant DB as MongoDB
+
+    Q->>AI: Trigger evaluation request
+    AI->>API: Download CV file
+    API-->>AI: CV PDF bytes
+    
+    AI->>AI: Parse CV (PyMuPDF4LLM)
+    AI->>LLM: Extract skills from CV
+    LLM-->>AI: Skills list
+    
+    AI->>LLM: Extract skills from job requirements
+    LLM-->>AI: Required skills list
+    
+    AI->>LLM: Analyze skills match
+    LLM-->>AI: Skills analysis
+    
+    AI->>LLM: Analyze education
+    LLM-->>AI: Education analysis
+    
+    AI->>LLM: Analyze experience
+    LLM-->>AI: Experience analysis
+    
+    AI->>AI: Calculate total score
+    AI->>AI: Determine status (thresholds)
+    
+    AI->>LLM: Generate summary
+    LLM-->>AI: Summary with reasoning
+    
+    rect rgb(255, 240, 245)
+        Note over AI,LLM: Reflection Loop (up to 2 iterations)
+        AI->>LLM: Reflect on evaluation
+        LLM-->>AI: Validation result
+        AI->>AI: Adjust score if needed
+    end
+    
+    alt Score >= 65 (Not Rejected)
+        AI->>LLM: Generate interview questions with expected answers
+        LLM-->>AI: 20 interview questions
+    end
+    
+    AI->>API: POST /api/reports (save evaluation)
+    API->>DB: Insert report document
+    API->>API: Update SQL application status
+    API-->>AI: Report saved confirmation
+
+---
+
+%% =====================================================
+%% TECHNOLOGY STACK SUMMARY
+%% =====================================================
+
+graph LR
+    subgraph "Frontend Stack"
+        F1[Angular 18]
+        F2[TypeScript 5.x]
+        F3[Bootstrap 5]
+        F4[RxJS]
+        F5[nginx]
+    end
+
+    subgraph "Backend Stack"
+        B1[.NET 10]
+        B2[C# 13]
+        B3[Entity Framework Core]
+        B4[MongoDB Driver]
+        B5[StackExchange.Redis]
+        B6[FluentValidation]
+    end
+
+    subgraph "AI Stack"
+        A1[Python 3.11]
+        A2[FastAPI]
+        A3[Pydantic v2]
+        A4[PyMuPDF4LLM]
+        A5[httpx]
+        A6[Google GenerativeAI SDK]
+    end
+
+    subgraph "Infrastructure"
+        I1[Docker Compose]
+        I2[SQL Server 2022]
+        I3[MongoDB 7]
+        I4[Redis 7]
+        I5[Azurite]
+        I6[Azure Functions]
+    end
+
+    subgraph "AI Model"
+        M1[Google Gemini API]
+        M2[gemma-3-27b-it]
+        M3[Google AI Studio]
+    end
+
+---
+
+%% =====================================================
+%% KEY FEATURES IMPLEMENTED
+%% =====================================================
+
+graph TB
+    subgraph "Authentication & Authorization"
+        AUTH1[JWT Bearer Tokens]
+        AUTH2[Role-Based Access<br/>Admin, HR, Candidate]
+        AUTH3[Redis Token Validation]
+        AUTH4[60-minute Token Expiry]
+    end
+
+    subgraph "CV Processing"
+        CV1[PDF Upload & Storage]
+        CV2[Text Extraction<br/>PyMuPDF4LLM]
+        CV3[LLM Skill Extraction]
+        CV4[Experience Parsing]
+    end
+
+    subgraph "AI Evaluation"
+        EVAL1[Skills Match Analysis]
+        EVAL2[Education Verification]
+        EVAL3[Experience Assessment]
+        EVAL4[Weighted Scoring<br/>40% Skills, 30% Edu, 30% Exp]
+        EVAL5[Self-Reflection<br/>Up to 2 iterations]
+    end
+
+    subgraph "Interview Preparation"
+        INT1[20 Tailored Questions]
+        INT2[Difficulty Levels<br/>Easy, Medium, Hard]
+        INT3[Expected Answers<br/>For HR Reference]
+        INT4[Category Classification]
+    end
+
+    subgraph "Status Workflow"
+        STAT1[Pending → Processing]
+        STAT2[Score >= 80: Accepted]
+        STAT3[Score 65-79: HR Review]
+        STAT4[Score < 65: Rejected]
+    end
+
+---
+
+%% =====================================================
+%% CHANGES LOG (Recent Updates)
+%% =====================================================
+%% 
+%% 1. LLM Migration: OpenAI → Google Gemini (gemma-3-27b-it)
+%%    - Updated llm_client.py to use Google GenerativeAI SDK
+%%    - Changed API configuration from OpenAI to Google AI Studio
+%%
+%% 2. Interview Questions Enhancement:
+%%    - Added expectedAnswer field to all question models
+%%    - Updated prompt to require expected answers
+%%    - Fixed MongoDB mapping for ExpectedAnswer persistence
+%%
+%% 3. JWT Authentication Fixes:
+%%    - Added ValidIssuer and ValidAudience to TokenValidationParameters
+%%    - Fixed 401 errors on authorized endpoints
+%%
+%% 4. Frontend Improvements:
+%%    - Fixed evaluation report data mapping (score, education, experience)
+%%    - Added status string conversion for enum values
+%%    - Fixed 'this' context bug in application mapping
+%%    - Updated branding to TalentLink
+%%
+%% 5. API URL Pattern Fixes:
+%%    - Reports endpoint: /api/reports/job/{jobId}/report/{reportId}
+%%    - Consistent route patterns across controllers
+%%
+%% =====================================================

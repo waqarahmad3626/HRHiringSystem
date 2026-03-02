@@ -1,0 +1,246 @@
+<div class="job-detail-container">
+  <div class="container py-5">
+    <button class="btn btn-outline-primary mb-4" (click)="goBack()">
+      <i class="fas fa-arrow-left me-2"></i> Back to Jobs
+    </button>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error" class="alert alert-danger">
+      <i class="fas fa-exclamation-triangle me-2"></i> {{ error }}
+    </div>
+
+    <!-- Job Details -->
+    <div *ngIf="!loading && !error && job" class="row">
+      <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <h2 class="card-title">{{ job.title }}</h2>
+              <span class="badge bg-success fs-6">Active</span>
+            </div>
+
+            <div class="job-meta mb-4">
+              <span class="meta-badge">
+                <i class="fas fa-circle me-2"></i> {{ job.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+
+            <div class="mb-4">
+              <h5><i class="fas fa-info-circle me-2 text-primary"></i> Description</h5>
+              <p class="text-muted">{{ job.description }}</p>
+            </div>
+
+            <div class="mb-4" *ngIf="job.requirements">
+              <h5><i class="fas fa-check-circle me-2 text-success"></i> Requirements</h5>
+              <p class="text-muted mb-0">{{ job.requirements }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Application Form -->
+      <div class="col-lg-4">
+        <div class="card shadow-sm application-card">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+              <i class="fas fa-file-alt me-2"></i> Apply for this Position
+            </h5>
+          </div>
+          <div class="card-body">
+            <div *ngIf="submitSuccess" class="alert alert-success">
+              <i class="fas fa-check-circle me-2"></i>
+              {{ submitMessage }} <span class="text-muted small">(Redirecting in 3 seconds...)</span>
+            </div>
+
+            <div *ngIf="submitError" class="alert alert-danger">
+              <i class="fas fa-exclamation-circle me-2"></i>
+              {{ submitError }}
+            </div>
+
+            <form [formGroup]="applicationForm" (ngSubmit)="submitApplication()" *ngIf="!submitSuccess">
+              <!-- Drag & Drop File Upload -->
+              <div class="mb-4">
+                <label class="form-label">Upload CV (PDF/DOC) *</label>
+                <div 
+                  class="drop-zone"
+                  [class.drop-zone-active]="isDragging"
+                  [class.drop-zone-error]="f['cvFile'].invalid && f['cvFile'].touched"
+                  [class.drop-zone-success]="selectedFile && !f['cvFile'].invalid"
+                  [class.drop-zone-disabled]="parsing"
+                  (dragover)="onDragOver($event)"
+                  (dragleave)="onDragLeave($event)"
+                  (drop)="onDrop($event)"
+                  (click)="fileInput.click()">
+                  
+                  <input 
+                    #fileInput
+                    type="file" 
+                    class="drop-zone-input"
+                    accept=".pdf,.doc,.docx"
+                    (change)="onFileSelected($event)"
+                    [disabled]="parsing">
+                  
+                  <!-- Default State -->
+                  <div *ngIf="!selectedFile && !parsing && !isDragging" class="drop-zone-content">
+                    <div class="drop-zone-icon">
+                      <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <p class="drop-zone-text">
+                      <span class="drop-zone-highlight">Click to upload</span> or drag and drop
+                    </p>
+                    <p class="drop-zone-hint">PDF, DOC, DOCX (max 10MB)</p>
+                    <p class="drop-zone-ai-hint">
+                      <i class="fas fa-magic me-1"></i> AI will auto-fill your details
+                    </p>
+                  </div>
+                  
+                  <!-- Dragging State -->
+                  <div *ngIf="isDragging && !parsing" class="drop-zone-content">
+                    <div class="drop-zone-icon drop-zone-icon-active">
+                      <i class="fas fa-file-download"></i>
+                    </div>
+                    <p class="drop-zone-text">Drop your CV here</p>
+                  </div>
+                  
+                  <!-- File Selected State -->
+                  <div *ngIf="selectedFile && !parsing" class="drop-zone-content drop-zone-file-info">
+                    <div class="drop-zone-file-icon">
+                      <i class="fas" [ngClass]="getFileIcon()"></i>
+                    </div>
+                    <div class="drop-zone-file-details">
+                      <p class="drop-zone-file-name">{{ selectedFile.name }}</p>
+                      <p class="drop-zone-file-size">{{ formatFileSize(selectedFile.size) }}</p>
+                    </div>
+                    <button type="button" class="drop-zone-remove" (click)="removeFile($event)">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                  
+                  <!-- Parsing State -->
+                  <div *ngIf="parsing" class="drop-zone-content drop-zone-parsing">
+                    <div class="drop-zone-spinner">
+                      <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                      </div>
+                    </div>
+                    <p class="drop-zone-text">
+                      <i class="fas fa-brain me-2"></i>AI is analyzing your CV...
+                    </p>
+                    <div class="drop-zone-progress">
+                      <div class="drop-zone-progress-bar"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Error Messages -->
+                <div class="drop-zone-errors" *ngIf="f['cvFile'].invalid && f['cvFile'].touched">
+                  <small class="text-danger" *ngIf="f['cvFile'].errors?.['invalidType']">
+                    <i class="fas fa-exclamation-circle me-1"></i> Only PDF and DOC files are allowed
+                  </small>
+                  <small class="text-danger" *ngIf="f['cvFile'].errors?.['tooLarge']">
+                    <i class="fas fa-exclamation-circle me-1"></i> File size must be less than 10MB
+                  </small>
+                  <small class="text-danger" *ngIf="f['cvFile'].errors?.['required']">
+                    <i class="fas fa-exclamation-circle me-1"></i> CV file is required
+                  </small>
+                </div>
+                
+                <!-- Parse Error -->
+                <div *ngIf="parseError" class="drop-zone-parse-error">
+                  <small class="text-warning">
+                    <i class="fas fa-info-circle me-1"></i> {{ parseError }}
+                  </small>
+                </div>
+                
+                <!-- Parsed Skills Display -->
+                <div *ngIf="parsedSkills.length > 0" class="parsed-skills-container">
+                  <div class="parsed-skills-header">
+                    <i class="fas fa-magic me-2"></i>
+                    <span>Skills Detected</span>
+                  </div>
+                  <div class="parsed-skills-list">
+                    <span *ngFor="let skill of parsedSkills.slice(0, 8)" class="skill-tag">
+                      {{ skill }}
+                    </span>
+                    <span *ngIf="parsedSkills.length > 8" class="skill-tag skill-tag-more">
+                      +{{ parsedSkills.length - 8 }} more
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">First Name *</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  formControlName="candidateFirstName"
+                  [class.is-invalid]="f['candidateFirstName'].invalid && f['candidateFirstName'].touched">
+                <div class="invalid-feedback" *ngIf="f['candidateFirstName'].invalid && f['candidateFirstName'].touched">
+                  First name is required (min 2 characters)
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Last Name *</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  formControlName="candidateLastName"
+                  [class.is-invalid]="f['candidateLastName'].invalid && f['candidateLastName'].touched">
+                <div class="invalid-feedback" *ngIf="f['candidateLastName'].invalid && f['candidateLastName'].touched">
+                  Last name is required (min 2 characters)
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Email *</label>
+                <input 
+                  type="email" 
+                  class="form-control" 
+                  formControlName="candidateEmail"
+                  [class.is-invalid]="f['candidateEmail'].invalid && f['candidateEmail'].touched">
+                <div class="invalid-feedback" *ngIf="f['candidateEmail'].invalid && f['candidateEmail'].touched">
+                  Valid email is required
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Phone *</label>
+                <input 
+                  type="tel" 
+                  class="form-control" 
+                  formControlName="candidatePhone"
+                  [class.is-invalid]="f['candidatePhone'].invalid && f['candidatePhone'].touched">
+                <div class="invalid-feedback" *ngIf="f['candidatePhone'].invalid && f['candidatePhone'].touched">
+                  Valid phone number is required
+                </div>
+              </div>
+
+             
+
+              <button 
+                type="submit" 
+                class="btn btn-primary w-100" 
+                [disabled]="submitting">
+                <span *ngIf="!submitting">
+                  <i class="fas fa-paper-plane me-2"></i> Submit Application
+                </span>
+                <span *ngIf="submitting">
+                  <span class="spinner-border spinner-border-sm me-2"></span> Submitting...
+                </span>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

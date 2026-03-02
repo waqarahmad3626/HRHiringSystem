@@ -1,0 +1,127 @@
+.application-review-container {
+  background-color: #f8f9fa;
+  min-height: calc(100vh - 100px);
+}
+
+.application-list {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.list-group-item {
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover:not(.active) {
+    background-color: #f8f9fa;
+  }
+  
+  &.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: transparent;
+  }
+}
+
+.score-display {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.score-card {
+  border: 1px solid #e9ecef;
+  
+  h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+  }
+}
+
+.bg-success-light {
+  background-color: rgba(40, 167, 69, 0.1) !important;
+}
+
+.bg-warning-light {
+  background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+.bg-danger-light {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+.bg-info-light {
+  background-color: rgba(23, 162, 184, 0.1) !important;
+}
+
+.bg-secondary-light {
+  background-color: rgba(108, 117, 125, 0.1) !important;
+}
+
+.info-card {
+  border: 1px solid #e9ecef;
+}
+
+.skill-section {
+  border: 1px solid #e9ecef;
+  min-height: 80px;
+}
+
+.badge {
+  font-size: 0.75rem;
+}
+
+.accordion-button {
+  font-size: 0.9rem;
+  
+  &:not(.collapsed) {
+    background-color: #f0f4ff;
+    color: #667eea;
+  }
+  
+  &:focus {
+    box-shadow: none;
+    border-color: rgba(102, 126, 234, 0.25);
+  }
+}
+
+.form-control:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+}
+
+.btn-outline-primary {
+  border-color: #667eea;
+  color: #667eea;
+  
+  &:hover {
+    background-color: #667eea;
+    border-color: #667eea;
+  }
+}
+
+// Scrollbar styling
+.application-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.application-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.application-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+  
+  &:hover {
+    background: #a1a1a1;
+  }
+}

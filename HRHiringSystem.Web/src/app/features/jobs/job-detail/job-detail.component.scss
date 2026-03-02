@@ -1,0 +1,412 @@
+.job-detail-container {
+  background-color: #f8f9fa;
+  min-height: calc(100vh - 200px);
+}
+
+.card {
+  border: none;
+  border-radius: 10px;
+}
+
+.card-title {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.job-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.meta-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  background-color: #f8f9fa;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.requirements-list, .responsibilities-list {
+  list-style-type: none;
+  padding-left: 0;
+  
+  li {
+    padding: 10px 0;
+    border-bottom: 1px solid #e9ecef;
+    position: relative;
+    padding-left: 25px;
+    
+    &:before {
+      content: '\f00c';
+      font-family: 'Font Awesome 5 Free';
+      font-weight: 900;
+      position: absolute;
+      left: 0;
+      color: #667eea;
+    }
+    
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}
+
+.application-card {
+  position: sticky;
+  top: 20px;
+}
+
+.card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.form-control {
+  &:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+  }
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  padding: 12px;
+  font-weight: 500;
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+.btn-outline-primary {
+  border-color: #667eea;
+  color: #667eea;
+  
+  &:hover {
+    background-color: #667eea;
+    border-color: #667eea;
+  }
+}
+
+.job-dates {
+  padding-top: 15px;
+  border-top: 1px solid #e9ecef;
+}
+
+// CV Parsing Styles
+.parsing-indicator {
+  padding: 8px 12px;
+  background-color: #e7f1ff;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+}
+
+.parsed-skills {
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.skill-badge {
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border: 1px solid #dee2e6;
+  transition: all 0.2s;
+  
+  &:hover {
+    background-color: #e9ecef;
+  }
+}
+
+// Drag & Drop File Upload Styles
+.drop-zone {
+  position: relative;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #fafbfc 0%, #f3f4f6 100%);
+  
+  &:hover:not(.drop-zone-disabled) {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #f0f0ff 0%, #e8e8ff 100%);
+    
+    .drop-zone-icon {
+      transform: scale(1.1);
+      color: #667eea;
+    }
+  }
+  
+  &.drop-zone-active {
+    border-color: #667eea;
+    border-style: solid;
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+    transform: scale(1.02);
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+  }
+  
+  &.drop-zone-success {
+    border-color: #10b981;
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  }
+  
+  &.drop-zone-error {
+    border-color: #ef4444;
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    animation: shake 0.5s ease-in-out;
+  }
+  
+  &.drop-zone-disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.drop-zone-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.drop-zone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.drop-zone-icon {
+  font-size: 48px;
+  color: #9ca3af;
+  transition: all 0.3s ease;
+  margin-bottom: 8px;
+  
+  &.drop-zone-icon-active {
+    color: #667eea;
+    animation: bounce 0.5s ease infinite;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.drop-zone-text {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.drop-zone-highlight {
+  color: #667eea;
+  font-weight: 600;
+}
+
+.drop-zone-hint {
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.drop-zone-ai-hint {
+  font-size: 12px;
+  color: #8b5cf6;
+  margin: 8px 0 0 0;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+  border-radius: 16px;
+  
+  i {
+    color: #8b5cf6;
+  }
+}
+
+// File Selected State
+.drop-zone-file-info {
+  flex-direction: row;
+  gap: 16px;
+  padding: 0 20px;
+}
+
+.drop-zone-file-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  
+  i {
+    font-size: 24px;
+    color: white;
+  }
+}
+
+.drop-zone-file-details {
+  flex: 1;
+  text-align: left;
+}
+
+.drop-zone-file-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+  word-break: break-all;
+}
+
+.drop-zone-file-size {
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 4px 0 0 0;
+}
+
+.drop-zone-remove {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background-color: #f3f4f6;
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #fee2e2;
+    color: #ef4444;
+  }
+}
+
+// Parsing State
+.drop-zone-parsing {
+  .drop-zone-text {
+    color: #667eea;
+    font-weight: 500;
+  }
+}
+
+.drop-zone-spinner {
+  margin-bottom: 12px;
+}
+
+.drop-zone-progress {
+  width: 200px;
+  height: 4px;
+  background-color: #e5e7eb;
+  border-radius: 2px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+.drop-zone-progress-bar {
+  height: 100%;
+  width: 30%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 2px;
+  animation: progress-indeterminate 1.5s ease-in-out infinite;
+}
+
+@keyframes progress-indeterminate {
+  0% { transform: translateX(-100%); width: 30%; }
+  50% { transform: translateX(150%); width: 50%; }
+  100% { transform: translateX(400%); width: 30%; }
+}
+
+// Error Messages
+.drop-zone-errors {
+  margin-top: 8px;
+  
+  small {
+    display: block;
+    padding: 6px 12px;
+    background-color: #fef2f2;
+    border-radius: 6px;
+  }
+}
+
+.drop-zone-parse-error {
+  margin-top: 8px;
+  
+  small {
+    display: block;
+    padding: 6px 12px;
+    background-color: #fefce8;
+    border-radius: 6px;
+  }
+}
+
+// Parsed Skills Container
+.parsed-skills-container {
+  margin-top: 16px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+  border-radius: 12px;
+  border: 1px solid #ddd6fe;
+}
+
+.parsed-skills-header {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #7c3aed;
+  margin-bottom: 12px;
+  
+  i {
+    font-size: 14px;
+  }
+}
+
+.parsed-skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.skill-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  background-color: white;
+  color: #6d28d9;
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  }
+  
+  &.skill-tag-more {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+}

@@ -1,0 +1,316 @@
+<div class="application-review-container">
+  <div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <button class="btn btn-outline-primary me-3" (click)="goBack()">
+          <i class="fas fa-arrow-left me-2"></i> Back
+        </button>
+        <span class="h4 mb-0" *ngIf="job">
+          Applications for: {{ job.title }}
+        </span>
+      </div>
+      <div *ngIf="!loading">
+        <span class="badge bg-primary fs-6">
+          {{ applications.length }} Total Applications
+        </span>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p class="mt-3 text-muted">Loading applications...</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error" class="alert alert-danger">
+      <i class="fas fa-exclamation-triangle me-2"></i> {{ error }}
+    </div>
+
+    <!-- Main Content -->
+    <div *ngIf="!loading && !error" class="row">
+      <!-- Left Panel: Application List -->
+      <div class="col-md-4">
+        <div class="card shadow-sm">
+          <div class="card-header bg-light">
+            <div class="d-flex justify-content-between align-items-center">
+              <h6 class="mb-0">Applications</h6>
+              <span class="badge bg-secondary">{{ filteredApplications.length }}</span>
+            </div>
+          </div>
+          
+          <!-- Filters -->
+          <div class="card-body border-bottom py-2">
+            <div class="row g-2">
+              <div class="col-6">
+                <select class="form-select form-select-sm" [(ngModel)]="statusFilter">
+                  <option *ngFor="let status of statusOptions" [ngValue]="status.value">
+                    {{ status.label }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-6">
+                <select class="form-select form-select-sm" [(ngModel)]="scoreRange">
+                  <option value="All">All Scores</option>
+                  <option value="High">High (80+)</option>
+                  <option value="Medium">Medium (65-79)</option>
+                  <option value="Low">Low (&lt;65)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Application List -->
+          <div class="list-group list-group-flush application-list">
+            <div *ngIf="filteredApplications.length === 0" class="text-center py-4 text-muted">
+              <i class="fas fa-inbox fa-2x mb-2"></i>
+              <p class="mb-0">No applications match filters</p>
+            </div>
+            
+            <button 
+              *ngFor="let app of filteredApplications"
+              class="list-group-item list-group-item-action"
+              [class.active]="selectedApplication?.id === app.id"
+              [ngClass]="getRowBackgroundClass(app.status)"
+              (click)="selectApplication(app)">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>{{ app.candidate?.firstName }} {{ app.candidate?.lastName }}</strong>
+                  <br>
+                  <small class="text-muted">{{ app.candidate?.email }}</small>
+                </div>
+                <div class="text-end">
+                  <span class="badge" [ngClass]="getStatusClass(app.status)">
+                    {{ app.status }}
+                  </span>
+                  <br>
+                  <span class="score-display" [ngClass]="getScoreClass(app.score)" *ngIf="app.score !== undefined">
+                    {{ app.score }}/100
+                  </span>
+                  <span class="text-muted" *ngIf="app.score === undefined">
+                    Pending
+                  </span>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel: Application Details -->
+      <div class="col-md-8">
+        <div *ngIf="!selectedApplication" class="card shadow-sm">
+          <div class="card-body text-center py-5">
+            <i class="fas fa-hand-pointer fa-3x text-muted mb-3"></i>
+            <p class="text-muted">Select an application to view details</p>
+          </div>
+        </div>
+
+        <div *ngIf="selectedApplication" class="card shadow-sm">
+          <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h5 class="mb-1">{{ selectedApplication.candidate?.firstName }} {{ selectedApplication.candidate?.lastName }}</h5>
+                <small class="text-muted">
+                  <i class="fas fa-envelope me-1"></i> {{ selectedApplication.candidate?.email }}
+                  <span class="mx-2">|</span>
+                  <i class="fas fa-phone me-1"></i> {{ selectedApplication.candidate?.phone }}
+                </small>
+              </div>
+              <div>
+                <button class="btn btn-outline-primary btn-sm" (click)="downloadCV()">
+                  <i class="fas fa-download me-1"></i> Download CV
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card-body">
+            <!-- Score Overview -->
+            <div class="row mb-4">
+              <div class="col-md-4">
+                <div class="score-card text-center p-3 rounded" 
+                     [ngClass]="{'bg-success-light': (selectedApplication.score || 0) >= 80, 
+                                 'bg-warning-light': (selectedApplication.score || 0) >= 65 && (selectedApplication.score || 0) < 80,
+                                 'bg-danger-light': (selectedApplication.score || 0) < 65 && selectedApplication.score !== undefined,
+                                 'bg-secondary-light': selectedApplication.score === undefined}">
+                  <h2 class="mb-0" [ngClass]="getScoreClass(selectedApplication.score)">
+                    {{ selectedApplication.score ?? 'N/A' }}
+                  </h2>
+                  <small class="text-muted">Overall Score</small>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="info-card p-3 rounded bg-light">
+                  <div class="d-flex align-items-center">
+                    <i class="fas fa-calendar-alt fa-2x text-primary me-3"></i>
+                    <div>
+                      <small class="text-muted">Applied</small>
+                      <div>{{ selectedApplication.appliedDate | date:'mediumDate' }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="info-card p-3 rounded bg-light">
+                  <div class="d-flex align-items-center">
+                    <i class="fas fa-robot fa-2x text-info me-3"></i>
+                    <div>
+                      <small class="text-muted">AI Evaluated</small>
+                      <div>{{ selectedApplication.evaluatedAt ? (selectedApplication.evaluatedAt | date:'mediumDate') : 'Pending' }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- AI Evaluation Report -->
+            <div *ngIf="loadingReport" class="text-center py-4">
+              <div class="spinner-border spinner-border-sm text-primary"></div>
+              <span class="ms-2">Loading evaluation report...</span>
+            </div>
+
+            <div *ngIf="selectedApplication.report && !loadingReport">
+              <!-- Skills Analysis -->
+              <div class="mb-4">
+                <h6><i class="fas fa-code me-2 text-primary"></i> Skills Analysis</h6>
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <div class="skill-section p-2 rounded bg-success-light">
+                      <small class="text-muted">Matched Skills</small>
+                      <div class="d-flex flex-wrap gap-1 mt-1">
+                        <span *ngFor="let skill of selectedApplication.report.skillsAnalysis.matchedSkills" 
+                              class="badge bg-success">{{ skill }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="skill-section p-2 rounded bg-danger-light">
+                      <small class="text-muted">Missing Skills</small>
+                      <div class="d-flex flex-wrap gap-1 mt-1">
+                        <span *ngFor="let skill of selectedApplication.report.skillsAnalysis.missingSkills" 
+                              class="badge bg-danger">{{ skill }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="skill-section p-2 rounded bg-info-light">
+                      <small class="text-muted">Additional Skills</small>
+                      <div class="d-flex flex-wrap gap-1 mt-1">
+                        <span *ngFor="let skill of selectedApplication.report.skillsAnalysis.additionalSkills" 
+                              class="badge bg-info">{{ skill }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Summary -->
+              <div class="mb-4">
+                <h6><i class="fas fa-chart-bar me-2 text-primary"></i> AI Summary</h6>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <div class="p-3 rounded bg-success-light">
+                      <strong class="text-success">Strengths</strong>
+                      <ul class="mb-0 mt-2">
+                        <li *ngFor="let strength of selectedApplication.report.summary.strengths">
+                          {{ strength }}
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="p-3 rounded bg-warning-light">
+                      <strong class="text-warning">Areas for Improvement</strong>
+                      <ul class="mb-0 mt-2">
+                        <li *ngFor="let weakness of selectedApplication.report.summary.weaknesses">
+                          {{ weakness }}
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-3 p-3 rounded bg-light">
+                  <strong>Recommendation:</strong>
+                  <p class="mb-0 mt-1">{{ selectedApplication.report.summary.recommendation }}</p>
+                </div>
+              </div>
+
+              <!-- Interview Questions -->
+              <div class="mb-4">
+                <h6><i class="fas fa-question-circle me-2 text-primary"></i> Suggested Interview Questions</h6>
+                <div class="accordion" id="questionsAccordion">
+                  <div *ngFor="let question of selectedApplication.report.interviewQuestions.slice(0, 5); let i = index" 
+                       class="accordion-item">
+                    <h2 class="accordion-header">
+                      <button class="accordion-button collapsed" type="button" 
+                              [attr.data-bs-toggle]="'collapse'" 
+                              [attr.data-bs-target]="'#question' + i">
+                        <span class="badge bg-primary me-2">{{ question.category }}</span>
+                        {{ question.question }}
+                      </button>
+                    </h2>
+                    <div [id]="'question' + i" class="accordion-collapse collapse">
+                      <div class="accordion-body">
+                        <strong>Expected Answer:</strong>
+                        <p class="mb-0">{{ question.expectedAnswer }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- HR Actions -->
+            <div class="border-top pt-4 mt-4">
+              <h6><i class="fas fa-user-tie me-2 text-primary"></i> HR Actions</h6>
+              
+              <!-- Notes -->
+              <div class="mb-3">
+                <label class="form-label">HR Notes</label>
+                <textarea 
+                  class="form-control" 
+                  [(ngModel)]="hrNotes" 
+                  rows="3"
+                  placeholder="Add notes about this candidate..."></textarea>
+                <button class="btn btn-outline-primary btn-sm mt-2" 
+                        (click)="saveHRNotes()" 
+                        [disabled]="savingNotes">
+                  <span *ngIf="!savingNotes"><i class="fas fa-save me-1"></i> Save Notes</span>
+                  <span *ngIf="savingNotes"><span class="spinner-border spinner-border-sm"></span> Saving...</span>
+                </button>
+              </div>
+
+              <!-- Schedule Interview -->
+              <div class="row g-2 align-items-end" *ngIf="selectedApplication.status !== 'InterviewScheduled' && selectedApplication.status !== 'Hired'">
+                <div class="col-md-4">
+                  <label class="form-label">Schedule Interview</label>
+                  <input type="date" class="form-control" [(ngModel)]="interviewDate">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Time</label>
+                  <input type="time" class="form-control" [(ngModel)]="interviewTime">
+                </div>
+                <div class="col-md-3">
+                  <button class="btn btn-primary" 
+                          (click)="scheduleInterview()" 
+                          [disabled]="!interviewDate || !interviewTime || schedulingInterview">
+                    <span *ngIf="!schedulingInterview"><i class="fas fa-calendar-check me-1"></i> Schedule</span>
+                    <span *ngIf="schedulingInterview"><span class="spinner-border spinner-border-sm"></span></span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Interview Scheduled Info -->
+              <div *ngIf="selectedApplication.interviewScheduledAt" class="alert alert-success mt-3">
+                <i class="fas fa-check-circle me-2"></i>
+                Interview scheduled for: {{ selectedApplication.interviewScheduledAt | date:'medium' }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

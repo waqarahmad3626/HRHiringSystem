@@ -1,0 +1,147 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: HRHiringSystem.API/Dockerfile
+    container_name: hrhiring-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=HRHiringSystemDB;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;
+      ConnectionStrings__MongoDB: mongodb://mongodb:27017
+      ConnectionStrings__Redis: redis:6379
+      ConnectionStrings__AzureBlob: ""
+      AIAgent__BaseUrl: http://ai-agent:8001
+      AzureFunction__BaseUrl: http://functions:80
+      AzureFunction__ApiKey: ${FUNCTION_API_KEY}
+      BaseUrl: http://localhost:8080
+      Jwt__Key: ${JWT_KEY}
+      Jwt__Issuer: ${JWT_ISSUER}
+      Jwt__Audience: ${JWT_AUDIENCE}
+      Jwt__ExpiresMinutes: ${JWT_EXPIRES_MINUTES}
+    ports:
+      - "8080:8080"
+    volumes:
+      - api_uploads:/app/uploads
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    restart: unless-stopped
+
+  ai-agent:
+    build:
+      context: ./HRHiringSystem.AIAgent
+      dockerfile: Dockerfile
+    container_name: hrhiring-ai-agent
+    environment:
+      DOTNET_API_URL: http://api:8080
+      AZURE_BLOB_CONNECTION_STRING: ${AZURE_BLOB_CONNECTION_STRING}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemma-3-27b-it}
+    ports:
+      - "8001:8001"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./HRHiringSystem.Web
+      dockerfile: Dockerfile
+    container_name: hrhiring-web
+    ports:
+      - "4200:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: hrhiring-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "${SQL_SA_PASSWORD}"
+    ports:
+      - "1434:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$${SA_PASSWORD}\" -Q \"SELECT 1\" > /dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:7
+    container_name: hrhiring-mongodb
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: hrhiring-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+
+  functions:
+    build:
+      context: ./HRHiringSystem.Functions
+      dockerfile: Dockerfile
+    container_name: hrhiring-functions
+    environment:
+      AzureWebJobsStorage: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;
+      FUNCTIONS_WORKER_RUNTIME: python
+      AI_AGENT_URL: http://ai-agent:8001
+      DOTNET_API_URL: http://api:8080
+      FUNCTION_API_KEY: ${FUNCTION_API_KEY}
+    ports:
+      - "7071:80"
+    depends_on:
+      - api
+      - ai-agent
+      - azurite
+    restart: unless-stopped
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: hrhiring-azurite
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    volumes:
+      - azurite_data:/data
+    command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0"
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
+  mongodb_data:
+  redis_data:
+  azurite_data:
+  api_uploads:
