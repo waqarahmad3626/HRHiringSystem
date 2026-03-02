@@ -362,7 +362,7 @@ Migrations and seed data are applied automatically on startup:
 
 | Entity | Count | Details |
 |--------|-------|---------|
-| Roles | 3 | Admin, HR, Candidate |
+| Roles | 3 | Admin, HR |
 | Users | 2 | Test admin + test HR user |
 | Candidates | 3 | Sample job seekers |
 | Jobs | 3 | Sample job postings |
@@ -591,7 +591,7 @@ TalentLink/
 
 | Endpoint | Method | Auth | Description |
 |----------|--------|------|-------------|
-| `/api/applications` | POST | Candidate | Apply for job |
+| `/api/applications` | POST | - | Apply for job |
 | `/api/applications/job/{jobId}` | GET | HR/Admin | List job applications |
 | `/api/applications/{id}/status` | PATCH | HR/Admin | Update status |
 
