@@ -24,11 +24,13 @@
 - [Tech Stack](#-tech-stack)
 - [Prerequisites](#-prerequisites)
 - [Quick Start](#-quick-start)
+- [Default Test User](#-default-test-user)
 - [Environment Variables](#-environment-variables)
 - [Project Structure](#-project-structure)
 - [API Documentation](#-api-documentation)
 - [AI Evaluation Pipeline](#-ai-evaluation-pipeline)
 - [Development Setup](#-development-setup)
+- [Database Seeding](#-database-seeding)
 - [Screenshots](#-screenshots)
 - [Contributing](#-contributing)
 - [License](#-license)
@@ -189,13 +191,92 @@ For detailed architecture diagrams, see [architecture.mmd](architecture.mmd).
 
 ## 📦 Prerequisites
 
-Before running TalentLink, ensure you have:
+### System Requirements
+- **OS**: Windows 10/11, macOS, or Linux
+- **RAM**: Minimum 8GB (16GB recommended)
+- **Disk Space**: 20GB free for containers and databases
 
-- **Docker Desktop** (v24+) with Docker Compose v2
-- **Git** for cloning the repository
-- **Google AI Studio API Key** - [Get one free](https://ai.google.dev/)
-- Minimum **8GB RAM** recommended
-- **20GB free disk space** for containers and databases
+### Required Software
+
+#### 1. Docker Desktop Installation
+
+**Windows (Recommended: WSL 2 Backend)**
+
+```powershell
+# Method 1: Download and Install
+# Visit: https://www.docker.com/products/docker-desktop
+# Download Docker Desktop for Windows and run installer
+
+# Method 2: Using Chocolatey
+choco install docker-desktop
+
+# Verify installation
+docker --version
+# Output: Docker version X.X.X
+```
+
+**Enable WSL 2 Backend (Windows)**
+
+```powershell
+# 1. Update WSL to latest version
+wsl --update
+
+# 2. Install WSL 2 (if not already installed)
+wsl --install -d Ubuntu
+
+# 3. Set WSL 2 as default version
+wsl --set-default-version 2
+
+# 4. After Docker Desktop installation, enable WSL 2 backend:
+# Open Docker Desktop → Settings → Resources → WSL Integration
+# Toggle "WSL 2 based Engine" and select Ubuntu
+```
+
+**macOS & Linux**
+
+```bash
+# macOS with Homebrew
+brew install --cask docker
+
+# Linux (Ubuntu/Debian)
+sudo apt-get update
+sudo apt-get install docker.io docker-compose
+sudo systemctl start docker
+```
+
+#### 2. Git Installation
+
+```powershell
+# Windows with Chocolatey
+choco install git
+
+# macOS
+brew install git
+
+# Linux (Ubuntu/Debian)
+sudo apt-get install git
+```
+
+#### 3. Google AI Studio API Key
+- Sign up: [Google AI Studio](https://ai.google.dev/)
+- Create new API key (free tier available)
+- Keep it safe for `.env` file configuration
+
+### Verification
+
+```bash
+# Check Docker
+docker --version
+# Docker version 24.0.0+
+
+# Check Docker Compose
+docker compose --version
+# Docker Compose version 2.x+
+
+# Check Git
+git --version
+# git version 2.40+
+```
 
 ---
 
@@ -239,9 +320,16 @@ FUNCTION_API_KEY=your-random-secret-key-for-functions
 docker compose up --build -d
 ```
 
-This will start:
+Wait for all containers to be healthy (~2-3 minutes):
+
+```bash
+# Check container status
+docker compose ps
+```
+
+All services should show status `Up`:
 - **web** → http://localhost:4200 (Angular Frontend)
-- **api** → http://localhost:8080 (NET API)
+- **api** → http://localhost:8080 (.NET API)
 - **ai-agent** → http://localhost:8001 (Python AI Agent)
 - **functions** → http://localhost:7071 (Azure Functions)
 - **sqlserver** → localhost:1434 (SQL Server)
@@ -249,24 +337,152 @@ This will start:
 - **redis** → localhost:6379 (Redis)
 - **azurite** → localhost:10000-10002 (Blob Storage)
 
-### 4. Access the Application
+### 4. Run Database Migrations
+
+**Automatic (Recommended - Default Behavior)**
+
+Migrations and seed data are applied automatically on startup:
+
+```
+[APP] Initializing database...
+[SEED] Database migrations applied successfully.
+[SEED] Roles created successfully.
+[SEED] Test users and candidates created:
+  ✓ Admin User: test@capstone.com / Test1234!
+  ✓ HR User: hr@capstone.com / HR@Capstone123
+  ✓ Test Candidates: John Smith, Sarah Johnson, Michael Williams
+[SEED] Sample jobs created:
+  ✓ Senior Software Engineer
+  ✓ Frontend Developer (Angular)
+  ✓ Python Data Scientist
+[SEED] Database initialization completed successfully.
+```
+
+**What Gets Seeded Automatically:**
+
+| Entity | Count | Details |
+|--------|-------|---------|
+| Roles | 3 | Admin, HR, Candidate |
+| Users | 2 | Test admin + test HR user |
+| Candidates | 3 | Sample job seekers |
+| Jobs | 3 | Sample job postings |
+
+**Manual (If needed)**
+
+```bash
+# Access the API container
+docker exec -it hrhiring-api sh
+
+# Run migrations only
+dotnet ef database update -p HRHiringSystem.Infrastructure
+
+# Exit container
+exit
+```
+
+**Verify Database**
+
+```bash
+# Check SQL Server connection
+docker exec -it hrhiring-sqlserver sqlcmd -S localhost -U sa -P "$SQL_SA_PASSWORD" -Q "SELECT @@VERSION"
+
+# Check MongoDB connection
+docker exec -it hrhiring-mongodb mongosh --eval "db.adminCommand('ping')"
+```
+
+### 5. Seed Test Data & Admin User
+
+**Database is automatically seeded on startup with:**
+
+✅ **Admin User** (Full system access)
+```
+Email:    test@capstone.com
+Password: Test1234!
+```
+
+✅ **HR Manager User** (Application review access)
+```
+Email:    hr@capstone.com
+Password: HR@Capstone123
+```
+
+✅ **3 Test Candidates** (Ready for job applications)
+- John Smith (john.smith@example.com)
+- Sarah Johnson (sarah.johnson@example.com)
+- Michael Williams (michael.williams@example.com)
+
+✅ **3 Sample Jobs** (Ready for applications)
+- Senior Software Engineer
+- Frontend Developer (Angular)
+- Python Data Scientist
+
+**No manual action needed!** All seed data is created automatically when the API starts for the first time.
+
+### 6. Access the Application
 
 Open your browser and navigate to:
 
 - **Frontend**: http://localhost:4200
+  - Login with test credentials above
 - **API Swagger**: http://localhost:8080/swagger
+  - Test all endpoints
 - **AI Agent Docs**: http://localhost:8001/docs
+  - AI evaluation endpoints
 
-### 5. Default Admin Credentials
+### 7. Troubleshooting
 
+**Containers not starting?**
+```bash
+# View logs
+docker compose logs -f api
+docker compose logs -f ai-agent
+
+# Restart all services
+docker compose restart
+
+# Full reset
+docker compose down
+docker compose up --build -d
 ```
-Email: admin@talentlink.com
-Password: Admin@123!
+
+**Port already in use?**
+```bash
+# Change port mappings in docker-compose.yml
+# Example: Change port 4200 to 4201
+```
+
+**Database connection errors?**
+```bash
+# Wait for database health checks
+docker compose logs sqlserver | grep healthcheck
+docker compose logs mongodb | grep healthcheck
 ```
 
 ---
 
-## 🔐 Environment Variables
+## � Default Test User
+
+### Admin Account (For Initial Setup)
+
+| Field | Value |
+|-------|-------|
+| Email | `test@capstone.com` |
+| Password | `Test1234!` |
+| Role | Admin |
+| Purpose | Initial system setup, user & job management |
+
+**Login Steps:**
+1. Navigate to http://localhost:4200
+2. Enter test@capstone.com and Test1234!
+3. You'll be logged in as Admin with full system access
+
+**⚠️ Security Note**: Change this password after first login in production. Use the "Change Password" feature in the app.
+
+You can create additional users (HR, Candidate) through the Admin Dashboard after logging in.
+
+---
+
+## �🔐 Environment Variables
 
 ### Required Variables
 
@@ -417,6 +633,23 @@ When a candidate applies:
    - Score < 65: **Rejected** ❌
 10. **Interview Questions** → 20 questions with expected answers (if not rejected)
 11. **Save Report** → MongoDB stores full evaluation
+
+---
+
+## 🌱 Database Seeding
+
+TalentLink automatically seeds the database on first startup with:
+
+- **3 Roles**: Admin, HR, Candidate
+- **2 Test Users**: Admin and HR accounts with credentials
+- **3 Test Candidates**: Sample job seekers
+- **3 Sample Jobs**: Senior Software Engineer, Frontend Developer, Python Data Scientist
+
+**See [SEEDDATA.md](SEEDDATA.md) for detailed documentation on:**
+- What data is seeded
+- How to customize seed data
+- Security considerations for production
+- Troubleshooting guide
 
 ---
 

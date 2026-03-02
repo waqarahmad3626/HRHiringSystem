@@ -221,5 +221,9 @@ app.UseAuthorization();
 // Map controller endpoints
 app.MapControllers();
 
+// Initialize database with migrations and seed data
+Console.WriteLine("[APP] Initializing database...");
+await SeedData.InitializeDatabaseAsync(app.Services);
+
 app.Run();
 
