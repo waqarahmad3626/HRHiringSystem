@@ -406,11 +406,6 @@ Email:    hr@capstone.com
 Password: HR@Capstone123
 ```
 
-✅ **3 Test Candidates** (Ready for job applications)
-- John Smith (john.smith@example.com)
-- Sarah Johnson (sarah.johnson@example.com)
-- Michael Williams (michael.williams@example.com)
-
 ✅ **3 Sample Jobs** (Ready for applications)
 - Senior Software Engineer
 - Frontend Developer (Angular)

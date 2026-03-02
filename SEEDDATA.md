@@ -21,7 +21,7 @@ When the API starts, it automatically:
 | Role Name | Description | Permissions |
 |-----------|-------------|------------|
 | **Admin** | Administrator with full system access | User/Job/Role management, System config |
-| **HR** | Human Resources Manager | Application review, Report generation, Candidate viewing |
+| **HR** | Human Resources Manager | Application review, Report generation |
 | **Candidate** | Job seeker | Job search, Application submission, Status tracking |
 
 ### Test Users
@@ -41,23 +41,6 @@ When the API starts, it automatically:
 - **Role**: HR
 - **Purpose**: Review applications and AI evaluations
 - **Access**: Dashboard, Applications, Reports (read-only)
-
-### Test Candidates
-
-1. **John Smith**
-   - Email: john.smith@example.com
-   - Phone: 555-0101
-   - Purpose: Sample applicant for testing
-
-2. **Sarah Johnson**
-   - Email: sarah.johnson@example.com
-   - Phone: 555-0102
-   - Purpose: Sample applicant for testing
-
-3. **Michael Williams**
-   - Email: michael.williams@example.com
-   - Phone: 555-0103
-   - Purpose: Sample applicant for testing
 
 ### Sample Jobs
 
@@ -105,7 +88,6 @@ When the API starts, you'll see seed data initialization logs:
 [SEED] Test users and candidates created:
   ✓ Admin User: test@capstone.com / Test1234!
   ✓ HR User: hr@capstone.com / HR@Capstone123
-  ✓ Test Candidates: John Smith, Sarah Johnson, Michael Williams
 [SEED] Sample jobs created:
   ✓ Senior Software Engineer
   ✓ Frontend Developer (Angular)
@@ -126,11 +108,10 @@ The seeding logic is in: `HRHiringSystem.Infrastructure/Data/SeedData.cs`
 await SeedData.InitializeDatabaseAsync(app.Services);
   ├─ Apply migrations
   ├─ SeedRolesAsync()
-  │   └─ Create Admin, HR, Candidate roles
+  │   └─ Create Admin, HR
   ├─ SeedTestDataAsync()
   │   ├─ Create Admin user (test@capstone.com)
   │   ├─ Create HR user (hr@capstone.com)
-  │   ├─ Create 3 test candidates
   │   └─ Create 3 sample jobs
   └─ Complete
 ```
