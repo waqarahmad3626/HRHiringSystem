@@ -1,6 +1,10 @@
-using HRHiringSystem.Application.Helpers;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using BCrypt.Net;
 using HRHiringSystem.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace HRHiringSystem.Infrastructure.Data;
 
@@ -63,12 +67,6 @@ public static class SeedData
                 Id = Guid.Parse("00000000-0000-0000-0000-000000000002"),
                 Name = "HR",
                 Description = "HR Manager who reviews and manages applications"
-            },
-            new Role
-            {
-                Id = Guid.Parse("00000000-0000-0000-0000-000000000003"),
-                Name = "Candidate",
-                Description = "Job candidate who applies for positions"
             }
         };
 
@@ -91,11 +89,10 @@ public static class SeedData
 
         var adminRoleId = Guid.Parse("00000000-0000-0000-0000-000000000001");
         var hrRoleId = Guid.Parse("00000000-0000-0000-0000-000000000002");
-        var candidateRoleId = Guid.Parse("00000000-0000-0000-0000-000000000003");
-
+       
         // Create test admin user
         var adminPassword = "Test1234!";
-        var adminPasswordHash = PasswordHasherService.HashPassword(adminPassword);
+        var adminPasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword);
 
         var adminUser = new User
         {
@@ -113,49 +110,19 @@ public static class SeedData
             Id = Guid.NewGuid(),
             Name = "Test HR Manager",
             Email = "hr@capstone.com",
-            PasswordHash = PasswordHasherService.HashPassword("HR@Capstone123"),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("HR@Capstone123"),
             RoleId = hrRoleId,
             IsActive = true
         };
 
-        // Create test candidates
-        var candidate1 = new Candidate
-        {
-            Id = Guid.NewGuid(),
-            FirstName = "John",
-            LastName = "Smith",
-            Email = "john.smith@example.com",
-            PhoneNumber = "555-0101"
-        };
-
-        var candidate2 = new Candidate
-        {
-            Id = Guid.NewGuid(),
-            FirstName = "Sarah",
-            LastName = "Johnson",
-            Email = "sarah.johnson@example.com",
-            PhoneNumber = "555-0102"
-        };
-
-        var candidate3 = new Candidate
-        {
-            Id = Guid.NewGuid(),
-            FirstName = "Michael",
-            LastName = "Williams",
-            Email = "michael.williams@example.com",
-            PhoneNumber = "555-0103"
-        };
-
-        // Add users and candidates to context
+        // Add users to context
         await dbContext.Users.AddAsync(adminUser);
         await dbContext.Users.AddAsync(hrUser);
-        await dbContext.Candidates.AddRangeAsync(candidate1, candidate2, candidate3);
         await dbContext.SaveChangesAsync();
 
-        Console.WriteLine("[SEED] Test users and candidates created:");
+        Console.WriteLine("[SEED] Test users created:");
         Console.WriteLine($"  ✓ Admin User: test@capstone.com / Test1234!");
         Console.WriteLine($"  ✓ HR User: hr@capstone.com / HR@Capstone123");
-        Console.WriteLine($"  ✓ Test Candidates: John Smith, Sarah Johnson, Michael Williams");
 
         // Create sample jobs
         var sampleJobs = new List<Job>
