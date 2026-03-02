@@ -702,6 +702,9 @@ redis-cli -h localhost -p 6379
 
 ## 📸 Screenshots
 
+### Demo
+![Application Demo](./docs/demo.gif)
+
 ### Candidate Portal
 - Job listings with search and filters
 - Application form with CV upload
