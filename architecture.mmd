@@ -1,7 +1,7 @@
 %% =====================================================
 %% TalentLink - HR Hiring System Architecture
 %% Complete System Overview
-%% Last Updated: March 2026
+%% Last Updated: March 5, 2026
 %% =====================================================
 
 graph TB
@@ -32,23 +32,33 @@ graph TB
         C2[(MongoDB 7<br/>Evaluation Reports<br/>Per-Job Databases)]
         C3[(Redis 7<br/>JWT Token Cache<br/>Session Management)]
         C4[(Azurite Blob<br/>CV File Storage<br/>PDF Documents)]
+        C5[(ChromaDB Vector Store<br/>Embeddings Index<br/>RAG Context Retrieval)]
     end
 
     subgraph "AI Agent Layer - Python FastAPI"
         D[Python 3.11 FastAPI<br/>Agentic AI Pipeline<br/>Docker Container]
         D1[CV Parser<br/>PyMuPDF4LLM<br/>Text Extraction]
-        D2[Skill Extractor<br/>LLM-Based<br/>CV & Job Skills]
+        D2[Adaptive Orchestrator<br/>Dynamic Step Selection<br/>Lightweight or Full Path]
+        D7[RAG Service<br/>Gemini Embeddings<br/>Semantic Retrieval]
+        D8[Vector Knowledge Base<br/>Role Data + Skill Taxonomy<br/>Historical Evaluations]
         D3[Scoring Tool<br/>Skills, Education<br/>Experience Analysis]
         D4[Reflection Tool<br/>Self-Validation<br/>Score Adjustment]
         D5[Question Generator<br/>Interview Qs<br/>Expected Answers]
         D6[LLM Client<br/>Google Gemini API<br/>gemma-3-27b-it]
         D --> D1
         D --> D2
+        D --> D7
         D --> D3
         D --> D4
         D --> D5
-        D1 --> D6
-        D2 --> D6
+        D1 --> D2
+        D2 --> D3
+        D7 --> D8
+        D7 --> D3
+        D7 --> D5
+        D7 --> D6
+        D8 --> C5
+        C2 --> D8
         D3 --> D6
         D4 --> D6
         D5 --> D6
@@ -85,13 +95,16 @@ graph TB
     E -->|6. Trigger Evaluation| D
     D -->|7. Download CV| C4
     D1 -->|8. Parse CV Text| D2
-    D2 -->|9. Extract Skills| D3
-    D3 -->|10. Calculate Score| D4
-    D4 -->|11. Reflect & Validate| D5
-    D5 -->|12. Generate Questions| D
-    D -->|13. Save Report| B1
-    B1 -->|14. Store in MongoDB| C2
-    B1 -->|15. Update SQL Status| C1
+    D2 -->|9. Adaptive Analysis Plan| D7
+    D7 -->|10. Retrieve Context| C5
+    D7 -->|11. Enrich Scoring & Questions| D3
+    D3 -->|12. Calculate Score| D4
+    D4 -->|13. Reflect & Validate| D5
+    D5 -->|14. Generate Questions| D
+    D -->|15. Save Report| B1
+    B1 -->|16. Store in MongoDB| C2
+    B1 -->|17. Update SQL Status| C1
+    D -->|18. Index Evaluation for RAG| C5
     
     %% ===== API DATA ACCESS =====
     
@@ -121,6 +134,6 @@ graph TB
     class A,A1,A2,A3 frontend
     class B,B1,B2,B3,B4 api
     class C1,C2,C3,C4 data
-    class D,D1,D2,D3,D4,D5,D6 ai
+    class D,D1,D2,D3,D4,D5,D6,D7,D8 ai
     class E event
     class G external

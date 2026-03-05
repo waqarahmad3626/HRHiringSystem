@@ -23,6 +23,14 @@ class Settings(BaseSettings):
     # Scoring thresholds
     score_accepted_threshold: int = 80
     score_hr_review_threshold: int = 65
+
+    # RAG settings
+    rag_enabled: bool = True
+    rag_persist_directory: str = "./rag_store"
+    rag_collection_prefix: str = "job_kb"
+    rag_top_k: int = 4
+    rag_max_context_chars: int = 2500
+    gemini_embedding_model: str = "models/text-embedding-004"
     
     class Config:
         env_file = ".env"

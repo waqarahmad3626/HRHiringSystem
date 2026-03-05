@@ -16,13 +16,17 @@ class QuestionGenerator:
     
     def generate_questions(self, job_title: str, job_requirements: str, 
                           required_skills: list[str], candidate_skills: list[str],
-                          cv_data: CvData, num_questions: int = 20) -> list[InterviewQuestion]:
+                          cv_data: CvData, num_questions: int = 20,
+                          rag_context: str = "") -> list[InterviewQuestion]:
         """Generate interview questions tailored to the job and candidate"""
         
         prompt = f"""Generate {num_questions} interview questions for a {job_title} position.
 
 Job Requirements:
 {job_requirements[:1000]}
+
+Retrieved Knowledge Context:
+{rag_context[:1800] if rag_context else 'No additional retrieved context available.'}
 
 Required Skills: {required_skills}
 Candidate Skills: {candidate_skills}

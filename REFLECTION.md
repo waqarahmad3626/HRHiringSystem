@@ -1,7 +1,7 @@
 # TalentLink - Capstone Project Reflection & Future Vision
 
 **Author:** Waqar Ahmad  
-**Date:** March 2026  
+**Date:** March 5, 2026  
 **Program:** Ciklum AI Academy - Level 3 Engineering Capstone  
 **Project:** TalentLink - AI-Powered HR Hiring System
 
@@ -92,10 +92,11 @@ This account has full system access including:
 
 #### Implemented Features:
 - **CV Parsing**: PyMuPDF4LLM for intelligent PDF extraction
-- **Skills Extraction**: LLM-based identification of candidate skills from CVs
+- **Adaptive Orchestration**: Dynamic lightweight/full analysis path based on CV-job fit
+- **RAG Retrieval**: Embedding-based context retrieval from role data, skill taxonomy, and historical evaluations
 - **Multi-Criteria Scoring**:
-  - Skills Match: 40%
-  - Education Verification: 30%
+  - Skills Match: 50%
+  - Education Verification: 20%
   - Experience Analysis: 30%
   - Total Score: 0-100
 - **Self-Reflection Mechanism**: AI validates its own evaluation (up to 2 iterations)

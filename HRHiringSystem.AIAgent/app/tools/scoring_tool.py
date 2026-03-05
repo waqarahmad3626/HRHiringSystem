@@ -155,12 +155,15 @@ JSON:"""
     def generate_summary(self, cv_data: CvData, job_title: str, job_requirements: str,
                         skills_analysis: SkillsAnalysis, education_analysis: EducationAnalysis,
                         experience_analysis: ExperienceAnalysis, total_score: int,
-                        status: str) -> EvaluationSummary:
+                        status: str, rag_context: str = "") -> EvaluationSummary:
         """Generate evaluation summary with reasoning"""
         prompt = f"""Generate an evaluation summary for this job application:
 
 Job: {job_title}
 Requirements: {job_requirements[:500]}
+
+    Retrieved Knowledge Context:
+    {rag_context[:1800] if rag_context else 'No additional retrieved context available.'}
 
 Candidate:
 - Skills match: {skills_analysis.match_percentage}%

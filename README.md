@@ -71,10 +71,12 @@
 
 ### AI-Powered Evaluation
 - 🔍 Automated CV parsing and text extraction
+- 🧭 Adaptive orchestration (lightweight or full extraction path based on CV/job fit)
 - 🎯 Skills matching against job requirements
 - 🎓 Education verification
 - 💼 Experience analysis
-- 📊 Weighted scoring (Skills 40%, Education 30%, Experience 30%)
+- 🧠 RAG-enriched context retrieval (job profile + historical evaluations + skill taxonomy)
+- 📊 Weighted scoring (Skills 50%, Education 20%, Experience 30%)
 - 🔄 Self-reflection for result validation
 - ❓ 20 interview questions with expected answers
 
@@ -124,7 +126,14 @@
 │  ┌──────────────────────────────────────────────────────────────────────┐   │
 │  │                    Python FastAPI AI Agent                           │   │
 │  ├──────────────────────────────────────────────────────────────────────┤   │
-│  │  CV Parser │ Skill Extractor │ Scorer │ Reflector │ Q&A Generator   │   │
+│  │ CV Parser │ Adaptive Planner │ RAG Retriever │ Scorer │ Reflector    │   │
+│  │                 │                         │              │ Q&A Gen      │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                             │                                               │
+│                             ▼                                               │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │               ChromaDB Vector Store (RAG Knowledge Base)            │   │
+│  │      Role Context + Skill Taxonomy + Historical Evaluations         │   │
 │  └──────────────────────────────────────────────────────────────────────┘   │
 │                             │                                               │
 │                             ▼                                               │
@@ -167,6 +176,7 @@ For detailed architecture diagrams, see [architecture.mmd](architecture.mmd).
 | Python | 3.11 | Runtime |
 | FastAPI | 0.115+ | API Framework |
 | Pydantic | 2.x | Data Validation |
+| ChromaDB | 0.5+ | Vector Store for RAG |
 | PyMuPDF4LLM | 0.0.17 | PDF Text Extraction |
 | google-generativeai | 0.8+ | Gemini SDK |
 | httpx | 0.28+ | Async HTTP Client |
@@ -186,6 +196,7 @@ For detailed architecture diagrams, see [architecture.mmd](architecture.mmd).
 | Technology | Model | Purpose |
 |------------|-------|---------|
 | Google Gemini API | gemma-3-27b-it | LLM for Evaluation |
+| Google Gemini Embeddings | text-embedding-004 | Semantic Retrieval Embeddings |
 
 ---
 
@@ -615,19 +626,20 @@ When a candidate applies:
 2. **Queue Trigger** → Azure Function triggered
 3. **AI Agent** receives evaluation request
 4. **CV Parsing** → PyMuPDF4LLM extracts text
-5. **Skill Extraction** → LLM identifies skills from CV and job
-6. **Analysis** → Education, Experience, Skills scored
-7. **Total Score** → Weighted calculation:
-   - Skills Match: **40%**
-   - Education: **30%**
-   - Experience: **30%**
-8. **Reflection** → AI validates its own analysis (up to 2 iterations)
-9. **Status Decision**:
+5. **Adaptive Planning** → Agent chooses lightweight/full analysis path from CV-job fit
+6. **RAG Retrieval** → Semantic search retrieves job context, skill taxonomy, and similar past evaluations
+7. **Analysis** → Education, Experience, Skills scored
+8. **Total Score** → Weighted calculation:
+  - Skills Match: **50%**
+  - Education: **20%**
+  - Experience: **30%**
+9. **Reflection** → AI validates its own analysis (up to 2 iterations)
+10. **Status Decision**:
    - Score ≥ 80: **Accepted** ✅
    - Score 65-79: **HR Review** ⚬
    - Score < 65: **Rejected** ❌
-10. **Interview Questions** → 20 questions with expected answers (if not rejected)
-11. **Save Report** → MongoDB stores full evaluation
+11. **Interview Questions** → 20 questions with expected answers (if not rejected)
+12. **Save Report** → MongoDB stores full evaluation
 
 ---
 
